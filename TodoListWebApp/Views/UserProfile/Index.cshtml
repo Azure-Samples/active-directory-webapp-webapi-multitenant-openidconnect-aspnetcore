@@ -1,0 +1,268 @@
+﻿@model TodoListWebApp.Models.AADUserProfile
+
+
+<h2>/Users/@Model.userPrincipalName</h2>
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>User</title>
+</head>
+<body>
+    @if (Model == null)
+    {
+        <p>You have to sign-in to see your profile. Click @Html.ActionLink("here", "SignIn", "Account", new { redirectPath = "/UserProfile" }, null) to sign-in.</p>
+    }
+    else
+    {
+
+
+        <fieldset>
+            <legend>User</legend>
+            <table id="directoryObjects">
+                <tr>
+                    <td>
+                        <div class="display-label">
+                            @Html.DisplayNameFor(model => model.accountEnabled)
+                        </div>
+                    </td>
+                    <td>
+                        <div class="display-field">
+                            @Html.DisplayFor(model => model.accountEnabled)
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <div class="display-label">
+                            @Html.DisplayNameFor(model => model.city)
+                        </div>
+                    </td>
+                    <td>
+                        <div class="display-field">
+                            @Html.DisplayFor(model => model.city)
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <div class="display-label">
+                            @Html.DisplayNameFor(model => model.country)
+                        </div>
+                    </td>
+                    <td>
+                        <div class="display-field">
+                            @Html.DisplayFor(model => model.country)
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <div class="display-label">
+                            @Html.DisplayNameFor(model => model.department)
+                        </div>
+                    </td>
+                    <td>
+                        <div class="display-field">
+                            @Html.DisplayFor(model => model.department)
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <div class="display-label">
+                            @Html.DisplayNameFor(model => model.displayName)
+                        </div>
+                    </td>
+                    <td>
+                        <div class="display-field">
+                            @Html.DisplayFor(model => model.displayName)
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <div class="display-label">
+                            @Html.DisplayNameFor(model => model.givenName)
+                        </div>
+                    </td>
+                    <td>
+                        <div class="display-field">
+                            @Html.DisplayFor(model => model.givenName)
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <div class="display-label">
+                            @Html.DisplayNameFor(model => model.immutableId)
+                        </div>
+                    </td>
+                    <td>
+                        <div class="display-field">
+                            @Html.DisplayFor(model => model.immutableId)
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <div class="display-label">
+                            @Html.DisplayNameFor(model => model.jobTitle)
+                        </div>
+                    </td>
+                    <td>
+                        <div class="display-field">
+                            @Html.DisplayFor(model => model.jobTitle)
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <div class="display-label">
+                            @Html.DisplayNameFor(model => model.mail)
+                        </div>
+                    </td>
+                    <td>
+                        <div class="display-field">
+                            @Html.DisplayFor(model => model.mail)
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <div class="display-label">
+                            @Html.DisplayNameFor(model => model.mailNickname)
+                        </div>
+                    </td>
+                    <td>
+                        <div class="display-field">
+                            @Html.DisplayFor(model => model.mailNickname)
+                        </div>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="display-label">
+                            @Html.DisplayNameFor(model => model.postalCode)
+                        </div>
+                    </td>
+                    <td>
+                        <div class="display-field">
+                            @Html.DisplayFor(model => model.postalCode)
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <div class="display-label">
+                            @Html.DisplayNameFor(model => model.preferredLanguage)
+                        </div>
+                    </td>
+                    <td>
+                        <div class="display-field">
+                            @Html.DisplayFor(model => model.preferredLanguage)
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <div class="display-label">
+                            @Html.DisplayNameFor(model => model.state)
+                        </div>
+                    </td>
+                    <td>
+                        <div class="display-field">
+                            @Html.DisplayFor(model => model.state)
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <div class="display-label">
+                            @Html.DisplayNameFor(model => model.streetAddress)
+                        </div>
+                    </td>
+                    <td>
+                        <div class="display-field">
+                            @Html.DisplayFor(model => model.streetAddress)
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <div class="display-label">
+                            @Html.DisplayNameFor(model => model.surname)
+                        </div>
+                    </td>
+                    <td>
+                        <div class="display-field">
+                            @Html.DisplayFor(model => model.surname)
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <div class="display-label">
+                            @Html.DisplayNameFor(model => model.telephoneNumber)
+                        </div>
+                    </td>
+                    <td>
+                        <div class="display-field">
+                            @Html.DisplayFor(model => model.telephoneNumber)
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <div class="display-label">
+                            @Html.DisplayNameFor(model => model.usageLocation)
+                        </div>
+                    </td>
+                    <td>
+                        <div class="display-field">
+                            @Html.DisplayFor(model => model.usageLocation)
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <div class="display-label">
+                            @Html.DisplayNameFor(model => model.userPrincipalName)
+                        </div>
+                    </td>
+                    <td>
+                        <div class="display-field">
+                            @Html.DisplayFor(model => model.userPrincipalName)
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <div class="display-label">
+                            @Html.DisplayNameFor(model => model.objectType)
+                        </div>
+                    </td>
+                    <td>
+                        <div class="display-field">
+                            @Html.DisplayFor(model => model.objectType)
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <div class="display-label">
+                            @Html.DisplayNameFor(model => model.objectId)
+                        </div>
+                    </td>
+                    <td>
+                        <div class="display-field">
+                            @Html.DisplayFor(model => model.objectId)
+                        </div>
+                    </td>
+                </tr>
+            </table>
+        </fieldset>
+    }
+</body>
+</html>
