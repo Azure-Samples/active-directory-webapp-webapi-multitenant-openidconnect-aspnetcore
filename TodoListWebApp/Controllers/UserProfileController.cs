@@ -4,9 +4,9 @@ using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
-using Microsoft.AspNet.Authorization;
-using Microsoft.AspNet.Mvc;
-using Microsoft.Extensions.OptionsModel;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using Newtonsoft.Json;
 using TodoListWebApp.Models;
@@ -18,13 +18,11 @@ namespace TodoListWebApp.Controllers
     [Authorize]
     public class UserProfileController : Controller
     {
-        private TodoListWebAppContext _db;
         private AzureADConfig _aadConfig;
-        private ITokenCache _tokenCache;
+        private IAzureAdTokenService _tokenCache;
 
-        public UserProfileController(TodoListWebAppContext context, IOptions<AzureADConfig> config, ITokenCache tokenCache)
+        public UserProfileController(IOptions<AzureADConfig> config, IAzureAdTokenService tokenCache)
         {
-            _db = context;
             _aadConfig = config.Value;
             _tokenCache = tokenCache;
         }
@@ -34,18 +32,18 @@ namespace TodoListWebApp.Controllers
         {
             try
             {
-                // Retrieve the user's objectID, tenantID, and access token since they are parameters used to query the Graph API.
-                string tenantId = User.FindFirst(AzureADConstants.TenantIdClaimType).Value;
-                string userObjectID = User.FindFirst(AzureADConstants.ObjectIdClaimType).Value;
-                AuthenticationContext authContext = new AuthenticationContext(String.Format(_aadConfig.AuthorityFormat, tenantId), _tokenCache.Init(userObjectID));
-                ClientCredential credential = new ClientCredential(_aadConfig.ClientId, _aadConfig.ClientSecret);
-                AuthenticationResult result = await authContext.AcquireTokenSilentAsync(_aadConfig.GraphResourceId, credential, new UserIdentifier(userObjectID, UserIdentifierType.UniqueId));
+                string token = await _tokenCache.GetAccessTokenForAadGraph();
 
                 // Call the Graph API and retrieve the user's profile.
-                string requestUrl = String.Format("{0}/{1}{2}?api-version={3}", _aadConfig.GraphBaseEndpoint, tenantId, "/me", _aadConfig.GraphApiVersion);
+                string requestUrl = String.Format("{0}/{1}{2}?api-version={3}", 
+                    _aadConfig.GraphBaseEndpoint, 
+                    User.FindFirst(AzureADConstants.TenantIdClaimType).Value,
+                    "/me", 
+                    _aadConfig.GraphApiVersion);
+
                 HttpClient client = new HttpClient();
                 HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, requestUrl);
-                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", result.AccessToken);
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
                 HttpResponseMessage response = await client.SendAsync(request);
 
                 if (!response.IsSuccessStatusCode)

@@ -2,8 +2,11 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
-using Microsoft.Data.Entity;
+using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using TodoListWebApp.Models;
 using TodoListWebApp.Utils;
@@ -19,34 +22,41 @@ namespace TodoListWebApp.Services
         public DateTime LastWrite { get; set; }
     }
 
-    // An EF based implementation of the ADAL token cache and token caching service
-    public class DbTokenCache : TokenCache, ITokenCache
+
+    // An EF based implementation of the ADAL token cache
+    public class DbTokenCache : TokenCache, IAzureAdTokenService
     {
         private TodoListWebAppContext _db;
-        string User;
-        PerWebUserCache Cache;
+        private string _userId;
+        private AzureADConfig _aadConfig;
+        private PerWebUserCache _cache;
+        private AuthenticationContext _authContext;
+        private readonly ClientCredential _appCredentials;
 
-        // Constructor which accepts the injected db context
-        public DbTokenCache(TodoListWebAppContext context)
+        public DbTokenCache(TodoListWebAppContext db, IHttpContextAccessor httpContextAccessor, IOptions<AzureADConfig> aadConfig)
         {
-            this.AfterAccess = AfterAccessNotification;
             this.BeforeAccess = BeforeAccessNotification;
+            this.AfterAccess = AfterAccessNotification;
             this.BeforeWrite = BeforeWriteNotification;
 
-            _db = context; 
+            _db = db;
+            _aadConfig = aadConfig.Value;
+            _userId = httpContextAccessor.HttpContext.User.FindFirst(AzureADConstants.ObjectIdClaimType).Value;
+            string tenantId = httpContextAccessor.HttpContext.User.FindFirst(AzureADConstants.TenantIdClaimType).Value;
+            _authContext = new AuthenticationContext(String.Format(_aadConfig.AuthorityFormat, tenantId), this);
+            _appCredentials = new ClientCredential(_aadConfig.ClientId, _aadConfig.ClientSecret);
         }
 
-        public TokenCache Init(string user)
+        public async Task<string> GetAccessTokenForAadGraph()
         {
-            // associate the cache to the current user of the web app
-            User = user;
+            AuthenticationResult result = await _authContext.AcquireTokenSilentAsync(_aadConfig.GraphResourceId, _appCredentials, new UserIdentifier(_userId, UserIdentifierType.UniqueId));
+            return result.AccessToken;
+        }
 
-            // look up the entry in the db
-            Cache = _db.PerUserCacheList.FirstOrDefault(c => c.webUserUniqueId == User);
-            // place the entry in memory
-            this.Deserialize((Cache == null) ? null : Cache.cacheBits);
-
-            return this;
+        public async Task RedeemAuthCodeForAadGraph(string code, string redirect_uri)
+        {
+            // Redeem the auth code and cache the result in the db for later use.
+            await _authContext.AcquireTokenByAuthorizationCodeAsync(code, new Uri(redirect_uri), _appCredentials, _aadConfig.GraphResourceId);
         }
 
         // clean up the db
@@ -62,28 +72,29 @@ namespace TodoListWebApp.Services
         // This is your chance to update the in-memory copy from the db, if the in-memory version is stale
         void BeforeAccessNotification(TokenCacheNotificationArgs args)
         {
-            if (Cache == null)
+            if (_cache == null)
             {
                 // first time access
-                Cache = _db.PerUserCacheList.FirstOrDefault(c => c.webUserUniqueId == User);
+                _cache = _db.PerUserCacheList.FirstOrDefault(c => c.webUserUniqueId == _userId);
             }
             else
             {   // retrieve last write from the db
                 var status = from e in _db.PerUserCacheList
-                             where (e.webUserUniqueId == User)
+                             where (e.webUserUniqueId == _userId)
                              select new
                              {
                                  LastWrite = e.LastWrite
                              };
                 // if the in-memory copy is older than the persistent copy
-                if (status.First().LastWrite > Cache.LastWrite)
+                if (status.First().LastWrite > _cache.LastWrite)
                 //// read from from storage, update in-memory copy
                 {
-                    Cache = _db.PerUserCacheList.FirstOrDefault(c => c.webUserUniqueId == User);
+                    _cache = _db.PerUserCacheList.FirstOrDefault(c => c.webUserUniqueId == _userId);
                 }
             }
-            this.Deserialize((Cache == null) ? null : Cache.cacheBits);
+            this.Deserialize((_cache == null) ? null : _cache.cacheBits);
         }
+
         // Notification raised after ADAL accessed the cache.
         // If the HasStateChanged flag is set, ADAL changed the content of the cache
         void AfterAccessNotification(TokenCacheNotificationArgs args)
@@ -91,18 +102,19 @@ namespace TodoListWebApp.Services
             // if state changed
             if (this.HasStateChanged)
             {
-                Cache = new PerWebUserCache
+                _cache = new PerWebUserCache
                 {
-                    webUserUniqueId = User,
+                    webUserUniqueId = _userId,
                     cacheBits = this.Serialize(),
                     LastWrite = DateTime.Now
                 };
                 //// update the db and the lastwrite                
-                _db.Entry(Cache).State = Cache.EntryId == 0 ? EntityState.Added : EntityState.Modified;
+                _db.Entry(_cache).State = _cache.EntryId == 0 ? EntityState.Added : EntityState.Modified;
                 _db.SaveChanges();
                 this.HasStateChanged = false;
             }
         }
+
         void BeforeWriteNotification(TokenCacheNotificationArgs args)
         {
             // if you want to ensure that no concurrent write take place, use this notification to place a lock on the entry

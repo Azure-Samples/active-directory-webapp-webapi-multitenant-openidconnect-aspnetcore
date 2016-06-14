@@ -2,28 +2,34 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNet.Authentication.Cookies;
-using Microsoft.AspNet.Builder;
-using Microsoft.AspNet.Hosting;
-using Microsoft.Data.Entity;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using TodoListWebApp.Models;
-using TodoListWebApp.Services;
 using TodoListWebApp.Utils;
+using Microsoft.EntityFrameworkCore;
+using TodoListWebApp.Services;
+using Microsoft.AspNetCore.Http;
 
 namespace TodoListWebApp
 {
     public partial class Startup
     {
-        public Startup()
+        public static string ClientId;
+        public static string ClientSecret;
+        public static string Authority;
+        public static string GraphResourceId;
+        public static string TodoListResourceId;
+
+        public Startup(IHostingEnvironment env)
         {
             // Setup configuration sources.
             Configuration = new ConfigurationBuilder()
-               .AddJsonFile("config.json")
-               .AddEnvironmentVariables()
-               .AddUserSecrets()
+               .SetBasePath(env.ContentRootPath)
+               .AddJsonFile("appsettings.json")
                .Build();
         }
 
@@ -32,6 +38,9 @@ namespace TodoListWebApp
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            // Add framework services.
+            services.AddMvc();
+
             // Add MVC services to the services container.
             services.AddMvc();
 
@@ -39,26 +48,28 @@ namespace TodoListWebApp
             services.AddAuthentication(sharedOptions => sharedOptions.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme);
 
             // Expose Azure AD configuration to controllers
-            services.Configure<AzureADConfig>(Configuration.GetChildren().Where(c => c.Key == "AzureAd").First());
+            services.AddOptions();
+            services.Configure<AzureADConfig>(Configuration.GetChildren().Where(c => c.Key.Equals("AzureAd")).First());
 
             // Register the db context
-            services.AddEntityFramework()
-                .AddSqlServer()
-                .AddDbContext<TodoListWebAppContext>(options =>
-                    options.UseSqlServer(Configuration["Data:DefaultConnection:ConnectionString"]));
+            services.AddDbContext<TodoListWebAppContext>(options => options.UseSqlite(Configuration["Data:ConnectionString"]));
+
+            // Expose the HttpContext to dependent services
+            services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 
             // Expose a token caching service to controllers, using a db implementation
-            services.AddTransient<ITokenCache, DbTokenCache>();
+            services.AddScoped<IAzureAdTokenService, DbTokenCache>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
         {
             // Add the console logger.
-            loggerFactory.AddConsole(LogLevel.Debug);
+            loggerFactory.AddConsole(Microsoft.Extensions.Logging.LogLevel.Debug);
 
             // Configure error handling middleware.
-            app.UseExceptionHandler("/Home/Error");
+            app.UseDeveloperExceptionPage();
+            //app.UseExceptionHandler("/Home/Error");
 
             // Add static files to the request pipeline.
             app.UseStaticFiles();
@@ -66,17 +77,11 @@ namespace TodoListWebApp
             // Configure the OpenIdConnect pipeline and required services.
             ConfigureAuth(app);
 
-            // Create or migrate the db during deployment
-            var serviceScope = app.ApplicationServices.GetRequiredService<IServiceScopeFactory>().CreateScope();
-            serviceScope.ServiceProvider.GetService<TodoListWebAppContext>().Database.Migrate();
-
-            // Add MVC to the request pipeline.
             app.UseMvc(routes =>
             {
                 routes.MapRoute(
                     name: "default",
-                    template: "{controller}/{action}/{id?}",
-                    defaults: new { controller = "Home", action = "Index" });
+                    template: "{controller=Home}/{action=Index}/{id?}");
             });
         }
     }

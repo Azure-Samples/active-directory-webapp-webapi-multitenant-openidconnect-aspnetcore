@@ -1,8 +1,8 @@
-using System;
-using Microsoft.Data.Entity;
-using Microsoft.Data.Entity.Infrastructure;
-using Microsoft.Data.Entity.Metadata;
-using Microsoft.Data.Entity.Migrations;
+﻿using System;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using TodoListWebApp.Models;
 
 namespace TodoListWebApp.Migrations
@@ -13,16 +13,17 @@ namespace TodoListWebApp.Migrations
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
             modelBuilder
-                .HasAnnotation("ProductVersion", "7.0.0-rc1-16348")
-                .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+                .HasAnnotation("ProductVersion", "1.0.0-rc2-20896");
 
             modelBuilder.Entity("TodoListWebApp.Models.AADUserRecord", b =>
                 {
+                    b.Property<string>("ObjectID");
+
                     b.Property<string>("UPN");
 
-                    b.Property<string>("TenantID");
+                    b.HasKey("ObjectID");
 
-                    b.HasKey("UPN");
+                    b.ToTable("Users");
                 });
 
             modelBuilder.Entity("TodoListWebApp.Models.Tenant", b =>
@@ -39,6 +40,8 @@ namespace TodoListWebApp.Migrations
                     b.Property<string>("Name");
 
                     b.HasKey("ID");
+
+                    b.ToTable("Tenants");
                 });
 
             modelBuilder.Entity("TodoListWebApp.Models.Todo", b =>
@@ -51,9 +54,11 @@ namespace TodoListWebApp.Migrations
                     b.Property<string>("Owner");
 
                     b.HasKey("ID");
+
+                    b.ToTable("Todoes");
                 });
 
-            modelBuilder.Entity("TodoListWebApp.Utils.PerWebUserCache", b =>
+            modelBuilder.Entity("TodoListWebApp.Services.PerWebUserCache", b =>
                 {
                     b.Property<int>("EntryId")
                         .ValueGeneratedOnAdd();
@@ -65,6 +70,8 @@ namespace TodoListWebApp.Migrations
                     b.Property<string>("webUserUniqueId");
 
                     b.HasKey("EntryId");
+
+                    b.ToTable("PerUserCacheList");
                 });
         }
     }

@@ -4,9 +4,9 @@ using System.Linq;
 using System.Net;
 using System.Security.Claims;
 using System.Threading.Tasks;
-using Microsoft.AspNet.Authorization;
-using Microsoft.AspNet.Mvc;
-using Microsoft.Data.Entity;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using TodoListWebApp.Models;
 
 namespace TodoListWebApp.Controllers
@@ -34,13 +34,13 @@ namespace TodoListWebApp.Controllers
         {
             if (id == null)
             {
-                return new HttpStatusCodeResult(400);
+                return new BadRequestResult();
             }
             Todo todo = _db.Todoes.Where(t => t.ID == id).FirstOrDefault();
             string owner = User.FindFirst(ClaimTypes.NameIdentifier).Value;
             if (todo == null || (todo.Owner != owner))
             {
-                return new HttpStatusCodeResult(404);
+                return new NotFoundResult();
             }
             return View(todo);
         }
@@ -71,14 +71,14 @@ namespace TodoListWebApp.Controllers
         {
             if (id == null)
             {
-                return new HttpStatusCodeResult(400);
+                return new BadRequestResult();
             }
 
             Todo todo = _db.Todoes.Where(t => t.ID == id).FirstOrDefault();
             string owner = User.FindFirst(ClaimTypes.NameIdentifier).Value;
             if (todo == null || (todo.Owner != owner))
             {
-                return new HttpStatusCodeResult(404);
+                return new NotFoundResult();
             }
             return View(todo);
         }
@@ -102,13 +102,13 @@ namespace TodoListWebApp.Controllers
         {
             if (id == null)
             {
-                return new HttpStatusCodeResult(400);
+                return new BadRequestResult();
             }
             Todo todo = _db.Todoes.Where(t => t.ID == id).FirstOrDefault();
             string owner = User.FindFirst(ClaimTypes.NameIdentifier).Value;
             if (todo == null || (todo.Owner != owner))
             {
-                return new HttpStatusCodeResult(404);
+                return new NotFoundResult();
             }
             return View(todo);
         }
@@ -122,7 +122,7 @@ namespace TodoListWebApp.Controllers
             string owner = User.FindFirst(ClaimTypes.NameIdentifier).Value;
             if (todo == null || (todo.Owner != owner))
             {
-                return new HttpStatusCodeResult(404);
+                return new BadRequestResult();
             }
             _db.Todoes.Remove(todo);
             _db.SaveChanges();

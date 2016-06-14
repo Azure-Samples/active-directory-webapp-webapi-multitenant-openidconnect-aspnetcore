@@ -2,9 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNet.Http.Extensions;
-using Microsoft.AspNet.Mvc;
-using Microsoft.Extensions.OptionsModel;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using TodoListWebApp.Models;
 using TodoListWebApp.Utils;
@@ -105,9 +104,9 @@ namespace TodoListWebApp.Controllers
             else
             {
                 _db.Tenants.Remove(tenant);
-                if (_db.Users.FirstOrDefault(a => (a.UPN == result.UserInfo.DisplayableId) && (a.TenantID == result.TenantId)) == null)
+                if (_db.Users.FirstOrDefault(a => a.ObjectID == result.UserInfo.UniqueId) == null)
                 {
-                    _db.Users.Add(new AADUserRecord { UPN = result.UserInfo.DisplayableId, TenantID = result.TenantId });
+                    _db.Users.Add(new AADUserRecord { UPN = result.UserInfo.DisplayableId, ObjectID = result.UserInfo.UniqueId });
                 }
             }
 

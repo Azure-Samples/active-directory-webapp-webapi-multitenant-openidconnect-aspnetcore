@@ -1,16 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNet.Builder;
-using Microsoft.AspNet.Authentication.Cookies;
-using Microsoft.AspNet.Authentication.OpenIdConnect;
-using Microsoft.IdentityModel.Clients.ActiveDirectory;
-using TodoListWebApp.Utils;
-using System.IdentityModel.Tokens;
 using System.Security.Claims;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.IdentityModel.Clients.ActiveDirectory;
+using Microsoft.IdentityModel.Tokens;
 using TodoListWebApp.Models;
 using TodoListWebApp.Services;
+using TodoListWebApp.Utils;
+using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 
 namespace TodoListWebApp
 {
@@ -28,6 +28,7 @@ namespace TodoListWebApp
             app.UseOpenIdConnectAuthentication(new OpenIdConnectOptions
             {
                 AutomaticChallenge = true,
+                ResponseType = OpenIdConnectResponseTypes.CodeIdToken,
                 ClientId = Configuration["AzureAD:ClientId"],
                 Authority = String.Format(Configuration["AzureAd:AuthorityFormat"], AzureADConstants.Common),
                 PostLogoutRedirectUri = Configuration["AzureAd:RedirectUri"],
@@ -41,28 +42,28 @@ namespace TodoListWebApp
                 {
                     OnAuthenticationFailed = OnAuthenticationFailed,
                     OnAuthorizationCodeReceived = OnAuthorizationCodeReceived,
-                    OnAuthenticationValidated = OnAuthenticationValidated
+                    OnTokenValidated = OnTokenValidated,
                 }
             });
         }
 
         // Inject custom logic for validating which users we allow to sign in
         // Here we check that the user (or their tenant admin) has signed up for the application.
-        private Task OnAuthenticationValidated(AuthenticationValidatedContext context)
+        private Task OnTokenValidated(TokenValidatedContext context)
         {
             // Retrieve the db service
-            TodoListWebAppContext db = (TodoListWebAppContext)context.HttpContext.ApplicationServices.GetService(typeof(TodoListWebAppContext));
+            TodoListWebAppContext db = (TodoListWebAppContext)context.HttpContext.RequestServices.GetService(typeof(TodoListWebAppContext));
 
             // retriever caller data from the incoming principal
-            string issuer = context.AuthenticationTicket.Principal.FindFirst(AzureADConstants.Issuer).Value;
-            string UPN = context.AuthenticationTicket.Principal.FindFirst(ClaimTypes.Name).Value;
-            string tenantID = context.AuthenticationTicket.Principal.FindFirst(AzureADConstants.TenantIdClaimType).Value;
+            string issuer = context.Ticket.Principal.FindFirst(AzureADConstants.Issuer).Value;
+            string objectID = context.Ticket.Principal.FindFirst(AzureADConstants.ObjectIdClaimType).Value;
+            string tenantID = context.Ticket.Principal.FindFirst(AzureADConstants.TenantIdClaimType).Value;
 
             // Check if the caller is recorded in the db of users who went through the individual onboardoing
             // or if the caller comes from an admin-consented, recorded issuer.
             // If not, the caller was neither from a trusted issuer or a registered user - throw to block the authentication flow
             if ((db.Tenants.FirstOrDefault(a => ((a.IssValue == issuer) && (a.AdminConsented))) == null)
-                && (db.Users.FirstOrDefault(b => ((b.UPN == UPN) && (b.TenantID == tenantID))) == null))
+                && (db.Users.FirstOrDefault(b => (b.ObjectID == objectID)) == null))
             {
                 throw new SecurityTokenValidationException("Did you forget to sign-up?");
             }
@@ -73,15 +74,13 @@ namespace TodoListWebApp
         // Redeem the auth code for a token to the Graph API and cache it for later.
         private async Task OnAuthorizationCodeReceived(AuthorizationCodeReceivedContext context)
         {
-            // Retrieve the token cache service
-            ITokenCache tokenCache = (ITokenCache)context.HttpContext.ApplicationServices.GetService(typeof(ITokenCache));
+            // Redeem auth code for access token and cache it for later use
+            context.HttpContext.User = context.Ticket.Principal;
+            IAzureAdTokenService tokenService = (IAzureAdTokenService)context.HttpContext.RequestServices.GetService(typeof(IAzureAdTokenService));
+            await tokenService.RedeemAuthCodeForAadGraph(context.ProtocolMessage.Code, context.Properties.Items[OpenIdConnectDefaults.RedirectUriForCodePropertiesKey]);
 
-            string tenantId = context.AuthenticationTicket.Principal.FindFirst(AzureADConstants.TenantIdClaimType).Value;
-            string userObjectID = context.AuthenticationTicket.Principal.FindFirst(AzureADConstants.ObjectIdClaimType).Value;
-            AuthenticationContext authContext = new AuthenticationContext(String.Format(Configuration["AzureAd:AuthorityFormat"], tenantId), tokenCache.Init(userObjectID));
-            ClientCredential credential = new ClientCredential(Configuration["AzureAd:ClientId"], Configuration["AzureAd:ClientSecret"]);
-            AuthenticationResult authResult = await authContext.AcquireTokenByAuthorizationCodeAsync(
-                context.Code, new Uri(context.RedirectUri), credential, Configuration["AzureAd:GraphResourceId"]);
+            // Notify the OIDC middleware that we already took care of code redemption.
+            context.HandleCodeRedemption();
         }
 
         private Task OnAuthenticationFailed(AuthenticationFailedContext context)

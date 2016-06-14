@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
-using System.ComponentModel.DataAnnotations;
 
 namespace TodoListWebApp.Models
 {
@@ -29,8 +29,8 @@ namespace TodoListWebApp.Models
     public class AADUserRecord
     {
         [Key]
+        public string ObjectID { get; set; }
         public string UPN { get; set; }
-        public string TenantID { get; set; }
     }
 
     // Entity for saving tokens for accessing API
@@ -50,7 +50,7 @@ namespace TodoListWebApp.Models
     {
         [JsonProperty(PropertyName = "odata.metadata")]
         public string odata_metadata { get; set; }
-        [JsonProperty(PropertyName = "odata.type")] 
+        [JsonProperty(PropertyName = "odata.type")]
         public string odata_type { get; set; }
         public string objectType { get; set; }
         public string objectId { get; set; }

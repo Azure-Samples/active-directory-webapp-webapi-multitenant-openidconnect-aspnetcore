@@ -1,20 +1,14 @@
 ﻿@if (User.Identity.IsAuthenticated)
 {
-    using (Html.BeginForm("LogOff", "Account", FormMethod.Post, new { id = "logoutForm", @class = "navbar-right" }))
-    {
-        @Html.AntiForgeryToken()
-
-        <ul class="nav navbar-nav navbar-right">
-            <li>
-                @Html.ActionLink("Hello " + User.Identity.Name + "!", "Index", "UserProfile", routeValues: null, htmlAttributes: new { title = "Manage" })
-            </li>
-            <li>@Html.ActionLink("Sign out", "SignOut", "Account", routeValues: null, htmlAttributes: new { id = "loginLink" })</li>
-        </ul>
-    }
+    <ul class="nav navbar-nav navbar-right">
+        <li><a asp-controller="UserProfile" asp-action="Index">Hello @(User.Identity.Name)!</a></li>
+        <li><a asp-controller="Account" asp-action="SignOut">Sign Out</a></li>
+    </ul>
 }
 else
 {
     <ul class="nav navbar-nav navbar-right">
-        <li>@Html.ActionLink("Sign in", "SignIn", "Account", routeValues: null, htmlAttributes: new { id = "logoutLink" })</li>
+        <li><a asp-controller="Onboarding" asp-action="SignUp">Sign Up </a></li>
+        <li><a asp-controller="Account" asp-action="SignIn">Sign In</a></li>
     </ul>
 }
