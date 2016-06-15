@@ -91,4 +91,11 @@ The sample implements two distinct tasks: the onboarding of a new customer (aka:
 3. Click the SignUp button. You'll be transferred to the Azure AD portal. Sign in as the user you want to use for consenting. 4. If the user is from a tenant that is different from the one where the app was developed, you will be presented with a consent page. Click OK. You will be transported back to the app, where your registration will be finalized.
 
 ####  Sign in
-Once you signed up, you can either click on the Todo tab or the sign in link to gain access to the application. Note that if you are doing this in the same session in which you signed up, you will automatically sign in with the same account you used for signing up. If you are signing in during a new session, you will be presented with Azure AD's credentials prompt: sign in using an account compatible with the sign up option you chose earlier (the exact same account if you used user consent, any user form the same tenant if you used admin consent). 
+Once you signed up, you can either click on the Todo tab or the sign in link to gain access to the application. Note that if you are doing this in the same session in which you signed up, you will automatically sign in with the same account you used for signing up. If you are signing in during a new session, you will be presented with Azure AD's credentials prompt: sign in using an account compatible with the sign up option you chose earlier (the exact same account if you used user consent, any user form the same tenant if you used admin consent).
+
+### Troubleshooting
+
+This sample uses a SQLite database located at `TodoListWebApp\App_Data\TodoListWebApp.db`.  The initial Entity Framework migration has been included in the `TodoListWebApp\Migrations` folder.  If you encounter database-related exceptions in the app, take the following steps:
+
+- Ensure that the `TodoListWebApp.db` file exists.  An empty instance is included in the github repo, and the `.db` file should be created during first app run if it's not already there.
+- Ensure that the tables have been created in the SQLite db.  You should be able to run `dotnet ef database update` in the `TodoListWebApp` directory to create the tables.  If that doesn't work, you can also run `dotnet ef migrations script` to generate the SQL for creating the tables.  Execute that SQL against the `.db` file using a SQLite db explorer (there are many out there), and you should be good to go.
