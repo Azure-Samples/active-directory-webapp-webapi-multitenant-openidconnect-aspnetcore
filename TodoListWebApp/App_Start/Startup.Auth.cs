@@ -11,6 +11,7 @@ using TodoListWebApp.Models;
 using TodoListWebApp.Services;
 using TodoListWebApp.Utils;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
+using Microsoft.AspNetCore.Http;
 
 namespace TodoListWebApp
 {
@@ -43,6 +44,7 @@ namespace TodoListWebApp
                     OnAuthenticationFailed = OnAuthenticationFailed,
                     OnAuthorizationCodeReceived = OnAuthorizationCodeReceived,
                     OnTokenValidated = OnTokenValidated,
+                    OnRedirectToIdentityProvider = OnRedirectToIdentityProvider
                 }
             });
         }
@@ -54,17 +56,46 @@ namespace TodoListWebApp
             // Retrieve the db service
             TodoListWebAppContext db = (TodoListWebAppContext)context.HttpContext.RequestServices.GetService(typeof(TodoListWebAppContext));
 
-            // retriever caller data from the incoming principal
+            // Retrieve caller data from the incoming principal
             string issuer = context.Ticket.Principal.FindFirst(AzureADConstants.Issuer).Value;
             string objectID = context.Ticket.Principal.FindFirst(AzureADConstants.ObjectIdClaimType).Value;
             string tenantID = context.Ticket.Principal.FindFirst(AzureADConstants.TenantIdClaimType).Value;
+            string upn = context.Ticket.Principal.FindFirst(ClaimTypes.Upn).Value;
 
-            // Check if the caller is recorded in the db of users who went through the individual onboardoing
-            // or if the caller comes from an admin-consented, recorded issuer.
-            // If not, the caller was neither from a trusted issuer or a registered user - throw to block the authentication flow
-            if ((db.Tenants.FirstOrDefault(a => ((a.IssValue == issuer) && (a.AdminConsented))) == null)
-                && (db.Users.FirstOrDefault(b => (b.ObjectID == objectID)) == null))
+            // Look up existing sign up records from the database
+            Tenant tenant = db.Tenants.FirstOrDefault(a => a.IssValue.Equals(issuer));
+            AADUserRecord user = db.Users.FirstOrDefault(b => b.ObjectID.Equals(objectID));
+
+            // If the user is signing up, add the user or tenant to the database record of sign ups.
+            string adminConsentSignUp = null;
+            if (context.Properties.Items.TryGetValue(Constants.AdminConsentKey, out adminConsentSignUp))
             {
+                if (adminConsentSignUp == Constants.True)
+                {
+                    if (tenant == null)
+                    {
+                        tenant = new Tenant { Created = DateTime.Now, IssValue = issuer, Name = context.Properties.Items[Constants.TenantNameKey], AdminConsented = true };
+                        db.Tenants.Add(tenant);
+                    }
+                    else
+                    {
+                        tenant.AdminConsented = true;
+                    }
+                }
+                else if (user == null)
+                {
+                    user = new AADUserRecord { UPN = upn, ObjectID = objectID };
+                    db.Users.Add(user);
+                }
+
+                db.SaveChanges();
+            }
+
+            // Ensure that the caller is recorded in the db of users who went through the individual onboarding
+            // or if the caller comes from an admin-consented, recorded issuer.
+            if ((tenant == null || !tenant.AdminConsented) && (user == null))
+            {
+                // If not, the caller was neither from a trusted issuer or a registered user - throw to block the authentication flow
                 throw new SecurityTokenValidationException("Did you forget to sign-up?");
             }
 
@@ -81,6 +112,21 @@ namespace TodoListWebApp
 
             // Notify the OIDC middleware that we already took care of code redemption.
             context.HandleCodeRedemption();
+        }
+
+        // If the user is trying to sign up for their entire tenant, attach the admin_consent parameter to the request
+        private Task OnRedirectToIdentityProvider(RedirectContext context)
+        {
+            string adminConsentSignUp = null;
+            if (context.Request.Path == new PathString("/Account/SignUp") && context.Properties.Items.TryGetValue(Constants.AdminConsentKey, out adminConsentSignUp))
+            {
+                if (adminConsentSignUp == Constants.True)
+                {
+                    context.ProtocolMessage.Prompt = AzureADConstants.AdminConsent;
+                }
+            }
+
+            return Task.FromResult(0);
         }
 
         private Task OnAuthenticationFailed(AuthenticationFailedContext context)

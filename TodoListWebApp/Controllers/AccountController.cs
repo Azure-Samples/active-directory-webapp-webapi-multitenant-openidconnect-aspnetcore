@@ -10,11 +10,13 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using TodoListWebApp.Models;
 using TodoListWebApp.Services;
+using TodoListWebApp.Utils;
 
 namespace TodoListWebApp.Controllers
 {
     public class AccountController : Controller
     {
+        // Issue a challege to send the user to AAD for sign in
         public async Task SignIn(string redirectPath)
         {
             if (!User.Identity.IsAuthenticated)
@@ -23,6 +25,7 @@ namespace TodoListWebApp.Controllers
             }
         }
 
+        // Clear the cache of tokens for the user, and send a sign out request to AAD
         public async Task SignOut()
         {
             if (User.Identity.IsAuthenticated)
@@ -32,6 +35,27 @@ namespace TodoListWebApp.Controllers
                 await HttpContext.Authentication.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
                 await HttpContext.Authentication.SignOutAsync(OpenIdConnectDefaults.AuthenticationScheme);
             }
+        }
+
+        // Show the sign up form, asking the user to indicate individual vs. tenant-wide sign up
+        public ActionResult SignUp()
+        {
+            return View();
+        }
+
+        // Issue a challenge to send the user to AAD to sign in,
+        // adding some additional data to the request which will be used in Startup.Auth.cs
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task SignUp([Bind("ID", "Name", "AdminConsented")] Tenant tenant)
+        {
+            await HttpContext.Authentication.ChallengeAsync(
+                OpenIdConnectDefaults.AuthenticationScheme,
+                new AuthenticationProperties(new Dictionary<string, string>
+                {
+                    { Constants.AdminConsentKey, tenant.AdminConsented.ToString() },
+                    { Constants.TenantNameKey, tenant.Name }
+                }) { RedirectUri = "/Todo" });
         }
     }
 }
