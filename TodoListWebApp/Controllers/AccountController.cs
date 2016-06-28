@@ -45,6 +45,8 @@ namespace TodoListWebApp.Controllers
 
         // Issue a challenge to send the user to AAD to sign in,
         // adding some additional data to the request which will be used in Startup.Auth.cs
+        // The Tenant name here serves no functional purpose - it is only used to show how you
+        // can collect additional information from the user during sign up.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task SignUp([Bind("ID", "Name", "AdminConsented")] Tenant tenant)

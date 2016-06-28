@@ -12,6 +12,7 @@ using TodoListWebApp.Services;
 using TodoListWebApp.Utils;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Authentication;
 
 namespace TodoListWebApp
 {
@@ -29,7 +30,7 @@ namespace TodoListWebApp
             app.UseOpenIdConnectAuthentication(new OpenIdConnectOptions
             {
                 AutomaticChallenge = true,
-                ResponseType = OpenIdConnectResponseTypes.CodeIdToken,
+                ResponseType = OpenIdConnectResponseType.CodeIdToken,
                 ClientId = Configuration["AzureAD:ClientId"],
                 Authority = String.Format(Configuration["AzureAd:AuthorityFormat"], AzureADConstants.Common),
                 PostLogoutRedirectUri = Configuration["AzureAd:RedirectUri"],
@@ -41,7 +42,7 @@ namespace TodoListWebApp
                 },
                 Events = new OpenIdConnectEvents
                 {
-                    OnAuthenticationFailed = OnAuthenticationFailed,
+                    OnRemoteFailure = OnAuthenticationFailed,
                     OnAuthorizationCodeReceived = OnAuthorizationCodeReceived,
                     OnTokenValidated = OnTokenValidated,
                     OnRedirectToIdentityProvider = OnRedirectToIdentityProvider
@@ -129,10 +130,10 @@ namespace TodoListWebApp
             return Task.FromResult(0);
         }
 
-        private Task OnAuthenticationFailed(AuthenticationFailedContext context)
+        private Task OnAuthenticationFailed(FailureContext context)
         {
             context.HandleResponse();
-            context.Response.Redirect("/Home/Error?message=" + context.Exception.Message);
+            context.Response.Redirect("/Home/Error?message=" + context.Failure.Message);
             return Task.FromResult(0);
         }
     }

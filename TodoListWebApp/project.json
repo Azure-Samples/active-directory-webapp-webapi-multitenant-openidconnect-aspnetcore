@@ -9,30 +9,30 @@
     },
 
     "dependencies": {
-        "Microsoft.AspNetCore.Diagnostics": "1.0.0-rc2-final",
-        "Microsoft.AspNetCore.Mvc": "1.0.0-rc2-final",
-        "Microsoft.AspNetCore.Mvc.TagHelpers": "1.0.0-rc2-final",
-        "Microsoft.AspNetCore.Server.IISIntegration": "1.0.0-rc2-final",
-        "Microsoft.AspNetCore.Server.Kestrel": "1.0.0-rc2-final",
-        "Microsoft.AspNetCore.StaticFiles": "1.0.0-rc2-final",
-        "Microsoft.Extensions.Configuration.FileExtensions": "1.0.0-rc2-final",
-        "Microsoft.Extensions.Configuration.Json": "1.0.0-rc2-final",
-        "Microsoft.Extensions.Logging": "1.0.0-rc2-final",
-        "Microsoft.Extensions.Logging.Console": "1.0.0-rc2-final",
-        "Microsoft.Extensions.Logging.Debug": "1.0.0-rc2-final",
-        "Microsoft.AspNetCore.Hosting": "1.0.0-rc2-final",
-        "Microsoft.VisualStudio.Web.BrowserLink.Loader": "14.0.0-rc2-final",
-        "Microsoft.AspNetCore.Authentication.OpenIdConnect": "1.0.0-rc2-final",
-        "Microsoft.IdentityModel.Protocols.OpenIdConnect": "2.0.0-rc2-305061149",
-        "Microsoft.AspNetCore.Authentication.Cookies": "1.0.0-rc2-final",
+        "Microsoft.AspNetCore.Diagnostics": "1.0.0",
+        "Microsoft.AspNetCore.Mvc": "1.0.0",
+        "Microsoft.AspNetCore.Mvc.TagHelpers": "1.0.0",
+        "Microsoft.AspNetCore.Server.IISIntegration": "1.0.0",
+        "Microsoft.AspNetCore.Server.Kestrel": "1.0.0",
+        "Microsoft.AspNetCore.StaticFiles": "1.0.0",
+        "Microsoft.Extensions.Configuration.FileExtensions": "1.0.0",
+        "Microsoft.Extensions.Configuration.Json": "1.0.0",
+        "Microsoft.Extensions.Logging": "1.0.0",
+        "Microsoft.Extensions.Logging.Console": "1.0.0",
+        "Microsoft.Extensions.Logging.Debug": "1.0.0",
+        "Microsoft.AspNetCore.Hosting": "1.0.0",
+        "Microsoft.VisualStudio.Web.BrowserLink.Loader": "14.0.0",
+        "Microsoft.AspNetCore.Authentication.OpenIdConnect": "1.0.0",
+        "Microsoft.IdentityModel.Protocols.OpenIdConnect": "2.0.0",
+        "Microsoft.AspNetCore.Authentication.Cookies": "1.0.0",
         "Microsoft.IdentityModel.Clients.ActiveDirectory": "3.10.305161347",
         "System.Private.DataContractSerialization": "4.1.1-rc2-24008",
-        "Microsoft.EntityFrameworkCore.Sqlite": "1.0.0-rc2-final",
-        "Microsoft.Extensions.Options.ConfigurationExtensions": "1.0.0-rc2-final",
-        "Microsoft.EntityFrameworkCore.Tools": "1.0.0-preview1-final",
-        "Microsoft.Extensions.PlatformAbstractions": "1.0.0-rc2-final",
+        "Microsoft.EntityFrameworkCore.Sqlite": "1.0.0",
+        "Microsoft.Extensions.Options.ConfigurationExtensions": "1.0.0",
+        "Microsoft.EntityFrameworkCore.Tools": "1.0.0-preview2-final",
+        "Microsoft.Extensions.PlatformAbstractions": "1.0.0",
         "Microsoft.NETCore.App": {
-            "version": "1.0.0-rc2-3002702",
+            "version": "1.0.0",
             "type": "platform"
         }
     },
@@ -49,14 +49,14 @@
 
     "tools": {
         "Microsoft.EntityFrameworkCore.Tools": {
-            "version": "1.0.0-preview1-final",
+            "version": "1.0.0-preview2-final",
             "imports": [
                 "portable-net45+win8+dnxcore50",
                 "portable-net45+win8"
             ]
         },
         "Microsoft.AspNetCore.Server.IISIntegration.Tools": {
-            "version": "1.0.0-preview1-final",
+            "version": "1.0.0-preview2-final",
             "imports": "portable-net45+win8+dnxcore50"
         }
     },

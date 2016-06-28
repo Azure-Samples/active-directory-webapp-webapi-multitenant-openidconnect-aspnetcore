@@ -6,18 +6,16 @@ author: dstrockis
 
 # Build a multi-tenant SaaS web application that calls a web API using Azure AD
 
-This sample shows how to build a multi-tenant ASP.NET Core web application that uses OpenID Connect to sign up and sign in users from any Azure Active Directory (AD) tenant, using the ASP.Net OpenID Connect OWIN middleware and the Active Directory Authentication Library (ADAL) for .NET. The sample also demonstrates how to leverage the authorization code received at sign in time to invoke the Graph API.
+This sample shows how to build a multi-tenant ASP.NET Core web application that uses OpenID Connect to sign up and sign in users from any Azure Active Directory (AD) tenant, using the ASP.Net OpenID Connect middleware and the Active Directory Authentication Library (ADAL) for .NET. The sample also demonstrates how to leverage the authorization code received at sign in time to invoke the Graph API.
 
 For more information about how the protocols work in this scenario and other scenarios, see the [Authentication Scenarios for Azure AD](https://azure.microsoft.com/documentation/articles/active-directory-authentication-scenarios/) document.
 
-> This sample has finally been updated to ASP.NET Core RC2.  Looking for previous versions of this code sample? Check out the tags on the [releases](../../releases) GitHub page.
+> This sample has been updated to ASP.NET Core 1.0.  Looking for previous versions of this code sample? Check out the tags on the [releases](../../releases) GitHub page.
 
 ## How To Run This Sample
 
 Getting started is simple!  To run this sample you will need:
-- [.NET Core & .NET Core SDK RC2 releases](https://www.microsoft.com/net/download)
-- [ASP.NET Core RC2 release](https://blogs.msdn.microsoft.com/webdev/2016/05/16/announcing-asp-net-core-rc2/)
-- [Visual Studio 2015 Update 2](https://www.visualstudio.com/en-us/downloads/visual-studio-2015-downloads-vs.aspx)
+- To install .NET Core for Windows by following the instructions at [dot.net/core](https://dot.net/core), which will include Visual Studio 2015 Update 3.
 - An Internet connection
 - An Azure subscription (a free trial is sufficient)
 
