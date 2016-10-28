@@ -41,9 +41,6 @@ namespace TodoListWebApp
             // Add framework services.
             services.AddMvc();
 
-            // Add MVC services to the services container.
-            services.AddMvc();
-
             // Add Authentication services.
             services.AddAuthentication(sharedOptions => sharedOptions.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme);
 
