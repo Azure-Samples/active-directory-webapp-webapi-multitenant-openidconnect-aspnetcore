@@ -18,38 +18,6 @@ namespace TodoListWebApp
 {
     public partial class Startup
     {
-        public void ConfigureAuth(IApplicationBuilder app)
-        {
-            // Configure the OWIN pipeline to use cookie auth.
-            app.UseCookieAuthentication(new CookieAuthenticationOptions
-            {
-                AutomaticAuthenticate = true,
-            });
-
-            // Configure the OWIN pipeline to use OpenID Connect auth.
-            app.UseOpenIdConnectAuthentication(new OpenIdConnectOptions
-            {
-                AutomaticChallenge = true,
-                ResponseType = OpenIdConnectResponseType.CodeIdToken,
-                ClientId = Configuration["AzureAD:ClientId"],
-                Authority = String.Format(Configuration["AzureAd:AuthorityFormat"], AzureADConstants.Common),
-                PostLogoutRedirectUri = Configuration["AzureAd:RedirectUri"],
-                TokenValidationParameters = new TokenValidationParameters
-                {
-                    // instead of using the default validation (validating against a single issuer value, as we do in line of business apps), 
-                    // we inject our own multitenant validation logic
-                    ValidateIssuer = false
-                },
-                Events = new OpenIdConnectEvents
-                {
-                    OnRemoteFailure = OnAuthenticationFailed,
-                    OnAuthorizationCodeReceived = OnAuthorizationCodeReceived,
-                    OnTokenValidated = OnTokenValidated,
-                    OnRedirectToIdentityProvider = OnRedirectToIdentityProvider
-                }
-            });
-        }
-
         // Inject custom logic for validating which users we allow to sign in
         // Here we check that the user (or their tenant admin) has signed up for the application.
         private Task OnTokenValidated(TokenValidatedContext context)
