@@ -41,8 +41,36 @@ namespace TodoListWebApp
             // Add framework services.
             services.AddMvc();
 
+            services.AddCookieAuthentication();
+
+            // Configure the OWIN pipeline to use OpenID Connect auth.
+            services.AddOpenIdConnectAuthentication(options => 
+            {
+                options.ResponseType = OpenIdConnectResponseType.CodeIdToken;
+                options.ClientId = Configuration["AzureAD:ClientId"];
+                options.Authority = String.Format(Configuration["AzureAd:AuthorityFormat"], AzureADConstants.Common);
+                options.PostLogoutRedirectUri = Configuration["AzureAd:RedirectUri"];
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    // instead of using the default validation (validating against a single issuer value, as we do in line of business apps), 
+                    // we inject our own multitenant validation logic
+                    ValidateIssuer = false
+                };
+                options.Events = new OpenIdConnectEvents
+                {
+                    OnRemoteFailure = OnAuthenticationFailed,
+                    OnAuthorizationCodeReceived = OnAuthorizationCodeReceived,
+                    OnTokenValidated = OnTokenValidated,
+                    OnRedirectToIdentityProvider = OnRedirectToIdentityProvider
+                };
+            });
+            
             // Add Authentication services.
-            services.AddAuthentication(sharedOptions => sharedOptions.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme);
+            services.AddAuthentication(options => 
+            {
+                options.DefaultAuthenticationScheme = OpenIdConnectAuthenticationDefaults.AuthenticationScheme;
+                options.DefaultSignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+            });
 
             // Expose Azure AD configuration to controllers
             services.AddOptions();
@@ -71,9 +99,8 @@ namespace TodoListWebApp
             // Add static files to the request pipeline.
             app.UseStaticFiles();
 
-            // Configure the OpenIdConnect pipeline and required services.
-            ConfigureAuth(app);
-
+            app.UseAuthentication();
+            
             app.UseMvc(routes =>
             {
                 routes.MapRoute(
