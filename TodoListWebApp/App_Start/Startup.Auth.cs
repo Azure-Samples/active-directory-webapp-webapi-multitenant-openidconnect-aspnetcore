@@ -1,11 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using Microsoft.IdentityModel.Tokens;
 using TodoListWebApp.Models;
 using TodoListWebApp.Services;
@@ -13,41 +10,42 @@ using TodoListWebApp.Utils;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.AspNetCore.Authentication.Cookies;
 
 namespace TodoListWebApp
 {
     public partial class Startup
     {
-        public void ConfigureAuth(IApplicationBuilder app)
+        public void ConfigureServicesAuth(IServiceCollection services)
         {
-            // Configure the OWIN pipeline to use cookie auth.
-            app.UseCookieAuthentication(new CookieAuthenticationOptions
-            {
-                AutomaticAuthenticate = true,
-            });
+            // Add Authentication services.
+            services.AddAuthentication(sharedOptions => sharedOptions.DefaultSignInScheme = CookieAuthenticationDefaults.AuthenticationScheme)
+                // Configure the OWIN pipeline to use cookie auth.
+                .AddCookie(option=> new CookieAuthenticationOptions())
 
-            // Configure the OWIN pipeline to use OpenID Connect auth.
-            app.UseOpenIdConnectAuthentication(new OpenIdConnectOptions
-            {
-                AutomaticChallenge = true,
-                ResponseType = OpenIdConnectResponseType.CodeIdToken,
-                ClientId = Configuration["AzureAD:ClientId"],
-                Authority = String.Format(Configuration["AzureAd:AuthorityFormat"], AzureADConstants.Common),
-                PostLogoutRedirectUri = Configuration["AzureAd:RedirectUri"],
-                TokenValidationParameters = new TokenValidationParameters
+                // Configure the OWIN pipeline to use OpenID Connect auth.
+                .AddOpenIdConnect(option=> new OpenIdConnectOptions
                 {
-                    // instead of using the default validation (validating against a single issuer value, as we do in line of business apps), 
-                    // we inject our own multitenant validation logic
-                    ValidateIssuer = false
-                },
-                Events = new OpenIdConnectEvents
-                {
-                    OnRemoteFailure = OnAuthenticationFailed,
-                    OnAuthorizationCodeReceived = OnAuthorizationCodeReceived,
-                    OnTokenValidated = OnTokenValidated,
-                    OnRedirectToIdentityProvider = OnRedirectToIdentityProvider
-                }
-            });
+                    ResponseType = OpenIdConnectResponseType.CodeIdToken,
+                    ClientId = Configuration["AzureAD:ClientId"],
+                    Authority = String.Format(Configuration["AzureAd:AuthorityFormat"], AzureADConstants.Common),
+                    SignedOutRedirectUri = Configuration["AzureAd:RedirectUri"],
+                    TokenValidationParameters = new TokenValidationParameters
+                    {
+                        // instead of using the default validation (validating against a single issuer value, as we do in line of business apps), 
+                        // we inject our own multitenant validation logic
+                        ValidateIssuer = false
+                    },
+                    Events = new OpenIdConnectEvents
+                    {
+                        OnRemoteFailure = OnAuthenticationFailed,
+                        OnAuthorizationCodeReceived = OnAuthorizationCodeReceived,
+                        OnTokenValidated = OnTokenValidated,
+                        OnRedirectToIdentityProvider = OnRedirectToIdentityProvider
+                    }
+                });
+
         }
 
         // Inject custom logic for validating which users we allow to sign in
@@ -58,10 +56,10 @@ namespace TodoListWebApp
             TodoListWebAppContext db = (TodoListWebAppContext)context.HttpContext.RequestServices.GetService(typeof(TodoListWebAppContext));
 
             // Retrieve caller data from the incoming principal
-            string issuer = context.Ticket.Principal.FindFirst(AzureADConstants.Issuer).Value;
-            string objectID = context.Ticket.Principal.FindFirst(AzureADConstants.ObjectIdClaimType).Value;
-            string tenantID = context.Ticket.Principal.FindFirst(AzureADConstants.TenantIdClaimType).Value;
-            string upn = context.Ticket.Principal.FindFirst(ClaimTypes.Upn).Value;
+            string issuer = context.Principal.FindFirst(AzureADConstants.Issuer).Value;
+            string objectID = context.Principal.FindFirst(AzureADConstants.ObjectIdClaimType).Value;
+            string tenantID = context.Principal.FindFirst(AzureADConstants.TenantIdClaimType).Value;
+            string upn = context.Principal.FindFirst(ClaimTypes.Upn).Value;
 
             // Look up existing sign up records from the database
             Tenant tenant = db.Tenants.FirstOrDefault(a => a.IssValue.Equals(issuer));
@@ -107,7 +105,7 @@ namespace TodoListWebApp
         private async Task OnAuthorizationCodeReceived(AuthorizationCodeReceivedContext context)
         {
             // Redeem auth code for access token and cache it for later use
-            context.HttpContext.User = context.Ticket.Principal;
+            context.HttpContext.User = context.Principal;
             IAzureAdTokenService tokenService = (IAzureAdTokenService)context.HttpContext.RequestServices.GetService(typeof(IAzureAdTokenService));
             await tokenService.RedeemAuthCodeForAadGraph(context.ProtocolMessage.Code, context.Properties.Items[OpenIdConnectDefaults.RedirectUriForCodePropertiesKey]);
 
@@ -130,7 +128,7 @@ namespace TodoListWebApp
             return Task.FromResult(0);
         }
 
-        private Task OnAuthenticationFailed(FailureContext context)
+        private Task OnAuthenticationFailed(RemoteFailureContext context)
         {
             context.HandleResponse();
             context.Response.Redirect("/Home/Error?message=" + context.Failure.Message);

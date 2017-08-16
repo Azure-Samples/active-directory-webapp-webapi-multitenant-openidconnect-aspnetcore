@@ -10,12 +10,12 @@ This sample shows how to build a multi-tenant ASP.NET Core web application that 
 
 For more information about how the protocols work in this scenario and other scenarios, see the [Authentication Scenarios for Azure AD](https://azure.microsoft.com/documentation/articles/active-directory-authentication-scenarios/) document.
 
-> This sample has been updated to ASP.NET Core 1.0.  Looking for previous versions of this code sample? Check out the tags on the [releases](../../releases) GitHub page.
+> This sample has been updated to ASP.NET Core 1.1.  Looking for previous versions of this code sample? Check out the tags on the [releases](../../releases) GitHub page.
 
 ## How To Run This Sample
 
 Getting started is simple!  To run this sample you will need:
-- To install .NET Core for Windows by following the instructions at [dot.net/core](https://dot.net/core), which will include Visual Studio 2015 Update 3.
+- To install .NET Core for Windows by following the instructions at [dot.net/core](https://dot.net/core), which will include Visual Studio 2017.
 - An Internet connection
 - An Azure Active Directory (Azure AD) tenant. For more information on how to get an Azure AD tenant, please see [How to get an Azure AD tenant](https://azure.microsoft.com/en-us/documentation/articles/active-directory-howto-tenant/) 
 - A user account in your Azure AD tenant. This sample will not work with a Microsoft account, so if you signed in to the Azure portal with a Microsoft account and have never created a user account in your directory before, you need to do that now.
@@ -51,7 +51,7 @@ If you want to test both the Administrator and User consent flows discussed belo
 
 At this point we are ready to paste the configuration settings into the VS project that will tie it to its entry in your Azure AD tenant. 
 
-1. Open the solution in Visual Studio 2015.
+1. Open the solution in Visual Studio 2017.
 2. Open the `appsettings.json` file.
 4. Find the `ClientId` property and replace the value with the Application ID for the TodoListWebApp from the Azure portal.
 5. Find the `ClientSecret` and replace the value with the key for the TodoListWebApp from the Azure portal.

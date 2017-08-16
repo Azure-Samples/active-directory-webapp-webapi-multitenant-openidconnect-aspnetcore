@@ -40,9 +40,9 @@ namespace TodoListWebApp
         {
             // Add framework services.
             services.AddMvc();
-
-            // Add Authentication services.
-            services.AddAuthentication(sharedOptions => sharedOptions.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme);
+         
+            // Configure the OpenIdConnect pipeline and required services.
+            ConfigureServicesAuth(services);
 
             // Expose Azure AD configuration to controllers
             services.AddOptions();
@@ -70,9 +70,6 @@ namespace TodoListWebApp
 
             // Add static files to the request pipeline.
             app.UseStaticFiles();
-
-            // Configure the OpenIdConnect pipeline and required services.
-            ConfigureAuth(app);
 
             app.UseMvc(routes =>
             {
