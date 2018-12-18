@@ -24,7 +24,7 @@ Getting started is simple!  To run this sample you will need:
 
 From your shell or command line:
 
-`git clone https://github.com/Azure-Samples/active-directory-dotnet-webapp-webapi-multitenant-openidconnect-aspnetcore.git`
+`git clone https://github.com/Azure-Samples/active-directory-webapp-webapi-multitenant-openidconnect-aspnetcore.git`
 
 ### Step 2:  Create an Organizational user account in your Azure Active Directory tenant
 
